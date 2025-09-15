@@ -1,0 +1,5 @@
+{
+  "name": "AI Sports Image Generator",
+  "description": "An AI-powered assistant to generate stunning, photorealistic images for various sports categories and custom prompts.",
+  "requestFramePermissions": []
+}
