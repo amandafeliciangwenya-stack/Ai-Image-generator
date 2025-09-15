@@ -1,4 +1,3 @@
-
 export interface SportCategory {
   name: string;
   image: string;
@@ -7,5 +6,6 @@ export interface SportCategory {
 
 export interface GeneratedImage {
   src: string;
-  caption: string;
+  title: string;
+  description: string;
 }

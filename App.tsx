@@ -18,7 +18,7 @@ const App: React.FC = () => {
   const [generationTitle, setGenerationTitle] = useState<string>('');
   const [customPrompt, setCustomPrompt] = useState<string>('');
 
-  const handleGeneration = useCallback(async (prompt: string, title: string, count: number) => {
+  const handleGeneration = useCallback(async (prompt: string, title: string, count: number, isCustom: boolean) => {
     setIsLoading(true);
     setError(null);
     setGenerationTitle(title);
@@ -26,14 +26,28 @@ const App: React.FC = () => {
 
     try {
       const imageBytesArray = await geminiService.generateImages(prompt, count);
-      const captions = await geminiService.generateCaptions(title, count);
+      
+      let imagesWithData: GeneratedImage[];
 
-      const imagesWithSrc = imageBytesArray.map((bytes, index) => ({
-        src: `data:image/jpeg;base64,${bytes}`,
-        caption: captions[index] || `A stunning image of ${title}.`,
-      }));
+      if (isCustom) {
+        // For a single custom image, generate a champion story
+        const story = await geminiService.generateChampionStory(title.replace('Results for: ', '').replace(/"/g, ''));
+        imagesWithData = imageBytesArray.map((bytes) => ({
+          src: `data:image/jpeg;base64,${bytes}`,
+          title: story.name,
+          description: story.story,
+        }));
+      } else {
+        // For category selections, generate short captions
+        const captions = await geminiService.generateCaptions(title, count);
+        imagesWithData = imageBytesArray.map((bytes, index) => ({
+          src: `data:image/jpeg;base64,${bytes}`,
+          title: `${title} Moment`,
+          description: captions[index] || `A stunning image of ${title}.`,
+        }));
+      }
 
-      setGeneratedImages(imagesWithSrc);
+      setGeneratedImages(imagesWithData);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
@@ -45,8 +59,7 @@ const App: React.FC = () => {
 
   const handleCustomSubmit = useCallback((sanitizedPrompt: string) => {
     if (!customPrompt.trim()) return;
-    // Use the sanitized prompt for generation, but the original customPrompt for the title
-    handleGeneration(sanitizedPrompt, `Results for: "${customPrompt}"`, 1);
+    handleGeneration(sanitizedPrompt, `Results for: "${customPrompt}"`, 1, true);
   }, [customPrompt, handleGeneration]);
 
   const handleBack = () => {
